@@ -17,12 +17,8 @@ class ErrorHandler(commands.Cog):
         error = getattr(error, 'original', error)
 
         # Manche Fehler einfach ignorieren
-        ignored = (commands.UserInputError)
+        ignored = (commands.UserInputError, commands.CommandNotFound)
         if isinstance(error, ignored):
-            return
-
-        if isinstance(error, commands.CommandNotFound):
-            await ctx.message.add_reaction('\U0001F44F')
             return
 
         if isinstance(error, commands.NoPrivateMessage):
