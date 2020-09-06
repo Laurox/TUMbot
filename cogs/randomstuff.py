@@ -25,6 +25,10 @@ class Randomstuff(commands.Cog):
     async def repo(self, ctx):
         await ctx.send("<https://github.com/timschumi/TUMbot>")
 
+    @commands.command(aliases=['gettumbot'])
+    async def botinvite(self, ctx):
+        await ctx.send(f"https://discord.com/oauth2/authorize?&client_id={self.bot.user.id}&scope=bot&permissions=8")
+
 
 def setup(bot):
     bot.add_cog(Randomstuff(bot))
