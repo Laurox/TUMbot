@@ -7,24 +7,6 @@ class MessageStore(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
-    async def metafrage(self, ctx):
-        """Displays the meta-question-text"""
-
-        metafrageembed = discord.Embed(
-            title="Metafrage",
-            description='Eine Metafrage ist eine Frage über eine Frage, wie beispielsweise "Darf ich etwas fragen?" '
-                        'oder "Kennt sich jemand mit Computern aus?". In der Regel wird der Begriff Metafrage aber '
-                        'verallgemeinert und damit alle Fragen bezeichnet, die keine direkte Frage zum Problem des '
-                        'Hilfesuchenden sind. Der Hilfesuchende fragt also zunächst allgemein, ob jemand helfen kann. '
-                        '[...] Meistens werden Metafragen ignoriert oder der Fragende wird rüde darauf hingewiesen, '
-                        'dass ihm niemand bei seinem Problem helfen könne, ohne dies zu kennen. [...]'
-                        '\n\n **Beispiele** \n Kennt sich jemand mit Streams aus? \n Kann mir jemand bei Gad helfen? \n'
-                        'Darf ich euch was fragen? \n Kannst du mal herkommen?\n')
-        metafrageembed.set_footer(text="Quelle: http://metafrage.de/")
-        metafrageembed.set_thumbnail(url="https://cdn.pixabay.com/photo/2015/10/31/12/00/question-1015308_960_720.jpg")
-        await ctx.send(embed=metafrageembed)
-
     @commands.group(invoke_without_command=True)
     async def msg(self, ctx):
         """Allows for saving larger chunks of text using a shorthand"""

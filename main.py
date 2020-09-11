@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import glob
+from pathlib import Path
 import os
 import re
 from subprocess import call
@@ -23,6 +23,16 @@ def get_prefix(bot, message):
         return '!'
 
     return bot.dbconf_get(message.guild.id, 'prefix', '!')
+
+
+def find_fqcn(name):
+    if os.path.isfile(f"cogs/{name}.py"):
+        return f"cogs.{name}"
+
+    if os.path.isfile(f"cogs/legacy/{name}.py"):
+        return f"cogs.legacy.{name}"
+
+    return None
 
 
 bot = Bot(db, command_prefix=get_prefix)
@@ -56,7 +66,13 @@ async def ping(ctx):
 @commands.is_owner()
 async def load(ctx, extension):
     e = extension.lower()
-    bot.load_extension(f'cogs.{e}')
+    name = find_fqcn(e)
+
+    if name is None:
+        await ctx.send(f"Cog `{e}` could not be found.")
+        return
+
+    bot.load_extension(name)
     await ctx.message.add_reaction('\U00002705')
 
 
@@ -65,7 +81,13 @@ async def load(ctx, extension):
 @commands.is_owner()
 async def unload(ctx, extension):
     e = extension.lower()
-    bot.unload_extension(f'cogs.{e}')
+    name = find_fqcn(e)
+
+    if name is None:
+        await ctx.send(f"Cog `{e}` could not be found.")
+        return
+
+    bot.unload_extension(name)
     await ctx.message.add_reaction('\U00002705')
 
 
@@ -74,16 +96,28 @@ async def unload(ctx, extension):
 @commands.is_owner()
 async def reload(ctx, extension):
     e = extension.lower()
-    bot.reload_extension(f'cogs.{e}')
+    name = find_fqcn(e)
+
+    if name is None:
+        await ctx.send(f"Cog `{e}` could not be found.")
+        return
+
+    bot.reload_extension(name)
     await ctx.message.add_reaction('\U00002705')
 
 
 # Beim start alle module laden
-for filename in [re.search('/(.+?)\.py', a).group(1) for a in glob.glob("cogs/*.py")]:
+for path in Path('cogs').rglob('*.py'):
+    name = find_fqcn(path.stem)
+
+    if name is None:
+        print(f"Skipped loading Cog `{path.stem}`.")
+        continue
+
     try:
-        bot.load_extension(f'cogs.{filename}')
+        bot.load_extension(name)
     except Exception as e:
-        print(f"Exception while loading `{filename}`:")
+        print(f"Exception while loading `{name}`:")
         print(f"{type(e).__name__}: {e}")
 
 bot.run(os.environ['TUMBOT_TOKEN'])
