@@ -14,13 +14,13 @@ class Invite(commands.Cog):
             asyncio.run_coroutine_threadsafe(self.update_invites(g), self.bot.loop).result()
 
     def get_invitelog(self, guild):
-        return self.bot.dbconf_get(guild, 'invitelog')
+        return self.bot.conf.get(guild, 'invitelog')
 
     async def update_invites(self, guild):
         self.invites[guild.id] = await guild.invites()
 
     def set_invitelog(self, guild, channelid):
-        return self.bot.dbconf_set(guild, 'invitelog', channelid)
+        return self.bot.conf.set(guild, 'invitelog', channelid)
 
     @commands.group(invoke_without_command=True)
     async def invite(self, ctx):

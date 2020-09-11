@@ -7,10 +7,10 @@ class Prefixes(commands.Cog):
         self.bot = bot
 
     def get_prefix(self, guild):
-        return self.bot.dbconf_get(guild, 'prefix', '!')
+        return self.bot.conf.get(guild, 'prefix', '!')
 
     def set_prefix(self, guild, prefix):
-        return self.bot.dbconf_set(guild, 'prefix', prefix)
+        return self.bot.conf.set(guild, 'prefix', prefix)
 
     @commands.command()
     @commands.has_permissions(administrator=True)

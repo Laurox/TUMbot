@@ -9,6 +9,7 @@ from discord.ext import commands
 
 from bot import Bot
 from dbmgr import DbMgr
+from confmgr import ConfigManager
 
 try:
     dbpath = os.environ['TUMBOT_DBPATH']
@@ -16,13 +17,14 @@ except KeyError:
     dbpath = "db"
 
 db = DbMgr(dbpath)
+conf = ConfigManager(db)
 
 # Finde den Prefix eines Servers
 def get_prefix(bot, message):
     if message.guild is None:
         return '!'
 
-    return bot.dbconf_get(message.guild.id, 'prefix', '!')
+    return bot.conf.get(message.guild.id, 'prefix', '!')
 
 
 def find_fqcn(name):
@@ -35,7 +37,7 @@ def find_fqcn(name):
     return None
 
 
-bot = Bot(db, command_prefix=get_prefix)
+bot = Bot(db, conf, command_prefix=get_prefix)
 
 
 # Bot herunterfahren
