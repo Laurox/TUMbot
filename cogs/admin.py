@@ -28,36 +28,7 @@ class Admin(commands.Cog):
         if len(result) < 1:
             return
 
-        keys = result[0].keys()
-        key_length = {}
-
-        for row in result:
-            for key in keys:
-                if not key in key_length:
-                    key_length[key] = len(str(key))
-
-                key_length[key] = max(key_length[key], len(str(row[key])))
-
-        text = "|"
-
-        for i in keys:
-            text += f" {str(i).ljust(key_length[i])} |"
-
-        text += "\n" + '-' * len(text)
-
-        for row in result:
-            newtext = "\n|"
-            for key in keys:
-                newtext += f" {str(row[key]).ljust(key_length[key])} |"
-
-            # -6: Account for code block
-            if len(text) + len(newtext) >= 2000 - 6:
-                await ctx.send(f"```{text}```")
-                text = ""
-
-            text += newtext
-
-        await ctx.send(f"```{text}```")
+        await self.bot.send_table(ctx, result[0].keys(), result)
 
     @commands.command(aliases=['purge'])
     @commands.cooldown(2, 600, type=commands.BucketType.default)

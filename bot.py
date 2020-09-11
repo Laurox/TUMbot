@@ -1,6 +1,7 @@
 import time
 from threading import Thread
 
+import discord
 from discord.ext.commands import Bot as DBot
 from schedule import Scheduler
 
@@ -61,3 +62,34 @@ class Bot(DBot):
 
         with self.db.get(guild_id) as db:
             db.execute("UPDATE config SET value = ? WHERE name = ?", (value, name))
+
+    async def send_table(self, messageable: discord.abc.Messageable, keys, table, maxlen=2000):
+        key_length = {}
+
+        for row in table:
+            for key in keys:
+                if not key in key_length:
+                    key_length[key] = len(str(key))
+
+                key_length[key] = max(key_length[key], len(str(row[key])))
+
+        text = "|"
+
+        for i in keys:
+            text += f" {str(i).ljust(key_length[i])} |"
+
+        text += "\n" + '-' * len(text)
+
+        for row in table:
+            newtext = "\n|"
+            for key in keys:
+                newtext += f" {str(row[key]).ljust(key_length[key])} |"
+
+            # -6: Account for code block
+            if len(text) + len(newtext) >= maxlen - 6:
+                await messageable.send(f"```{text}```")
+                text = ""
+
+            text += newtext
+
+        await messageable.send(f"```{text}```")
