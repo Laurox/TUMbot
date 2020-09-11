@@ -75,10 +75,6 @@ class Birthdays(commands.Cog):
             return
         day, month = birthdate.strip(".").split(".")
 
-        # Update message channel if needed
-        if self.bot.conf.get(ctx.guild.id, "birthday_channel") is None:
-            self.bot.conf.set(ctx.guild.id, "birthday_channel", ctx.channel.id)
-
         with self.bot.db.get(ctx.guild.id) as db:
             db.execute("INSERT OR REPLACE INTO birthdays (userId, day, month) VALUES (?, ?, ?)",
                        (ctx.author.id, day, month))
