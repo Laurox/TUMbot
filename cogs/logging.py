@@ -6,10 +6,10 @@ class Logging(commands.Cog):
         self.bot = bot
 
     def get_logchannel(self, guild):
-        return self.bot.dbconf_get(guild, 'logchannel')
+        return self.bot.conf.get(guild, 'logchannel')
 
     def set_logchannel(self, guild, logchannel):
-        return self.bot.dbconf_set(guild, 'logchannel', logchannel)
+        return self.bot.conf.set(guild, 'logchannel', logchannel)
 
     # LogChannel setzen
     @commands.command()

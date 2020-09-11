@@ -76,8 +76,8 @@ class Birthdays(commands.Cog):
         day, month = birthdate.strip(".").split(".")
 
         # Update message channel if needed
-        if self.bot.dbconf_get(ctx.guild.id, "birthday_channel") is None:
-            self.bot.dbconf_set(ctx.guild.id, "birthday_channel", ctx.channel.id)
+        if self.bot.conf.get(ctx.guild.id, "birthday_channel") is None:
+            self.bot.conf.set(ctx.guild.id, "birthday_channel", ctx.channel.id)
 
         with self.bot.db.get(ctx.guild.id) as db:
             db.execute("INSERT OR REPLACE INTO birthdays (userId, day, month) VALUES (?, ?, ?)",
@@ -91,11 +91,11 @@ class Birthdays(commands.Cog):
         """Sets a new output channel for birthday messages"""
 
         if target is not None:
-            self.bot.dbconf_set(ctx.guild.id, "birthday_channel", target.id)
+            self.bot.conf.set(ctx.guild.id, "birthday_channel", target.id)
             await ctx.message.add_reaction('\U00002705')
             return
 
-        channel_id = self.bot.dbconf_get(ctx.guild.id, "birthday_channel")
+        channel_id = self.bot.conf.get(ctx.guild.id, "birthday_channel")
 
         if channel_id is None:
             await ctx.send("No channel set!")
