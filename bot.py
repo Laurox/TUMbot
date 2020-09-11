@@ -73,12 +73,14 @@ class Bot(DBot):
 
                 key_length[key] = max(key_length[key], len(str(row[key])))
 
-        text = "|"
+        header = "|"
+        headerline = "|"
 
         for i in keys:
-            text += f" {str(i).ljust(key_length[i])} |"
+            header += f" {str(i).ljust(key_length[i])} |"
+            headerline += '-' * (key_length[i] + 2) + '|'
 
-        text += "\n" + '-' * len(text)
+        text = header + "\n" + headerline
 
         for row in table:
             newtext = "\n|"
