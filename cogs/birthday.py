@@ -116,12 +116,12 @@ class Birthdays(commands.Cog):
 
     def congratulate_all(self):
         day, month = self.get_current_date()
-        for conn in self.bot.db.get_all():
-            asyncio.run_coroutine_threadsafe(self.congratulate(conn, day, month), self.bot.loop).result()
+        for guild in self.bot.guilds:
+            asyncio.run_coroutine_threadsafe(self.congratulate(guild.id, day, month), self.bot.loop).result()
 
-    async def congratulate(self, conn, day, month):
+    async def congratulate(self, guildid, day, month):
         text = f"Geburtstage am {day}.{month}.:"
-        users = conn.execute(
+        users = self.bot.db.get(guildid).execute(
             "SELECT userId FROM birthdays WHERE day = ? AND month = ?", (day, month)).fetchall()
         if len(users) == 0:
             return
@@ -129,14 +129,12 @@ class Birthdays(commands.Cog):
             text += f"\n    :tada: :fireworks: :partying_face: **Alles Gute zum Geburtstag**, <@{user[0]}> " \
                     f":partying_face: :fireworks: :tada: "
 
-        # This is essentially what dbconf_get does, but we don't have the guild ID :/
-        channel = conn.execute("SELECT value FROM config WHERE name = 'birthday_channel'").fetchall()
+        channel = self.bot.conf.get(guildid, 'birthday_channel')
 
-        # If channel isn't set
-        if len(channel) < 1:
+        if channel is None:
             return
 
-        channel = await self.bot.fetch_channel(channel[0][0])
+        channel = await self.bot.fetch_channel(channel)
 
         await channel.send(text)
 
