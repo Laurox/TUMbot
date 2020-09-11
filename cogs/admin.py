@@ -26,6 +26,7 @@ class Admin(commands.Cog):
             return
 
         if len(result) < 1:
+            await ctx.message.add_reaction('\U00002705')
             return
 
         await self.bot.send_table(ctx, result[0].keys(), result)
