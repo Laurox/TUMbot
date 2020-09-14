@@ -69,7 +69,10 @@ class ReactionRoles(commands.Cog):
 
         for entry in result:
             role = discord.utils.get(guild.roles, id=int(entry[0]))
-            await member.add_roles(role)
+            if role in member.roles:
+                await member.remove_roles(role)
+            else:
+                await member.add_roles(role)
 
         await message.remove_reaction(payload.emoji, member)
 
