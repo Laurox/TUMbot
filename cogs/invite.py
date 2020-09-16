@@ -55,12 +55,13 @@ class Invite(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         guild = member.guild
-        channel = self.bot.get_channel(int(self.get_invitelog(guild.id)))
-        if channel is None:
-            return
 
         old = self.invites[guild.id]
         self.invites[guild.id] = await guild.invites()
+
+        channel = self.bot.get_channel(int(self.get_invitelog(guild.id)))
+        if channel is None:
+            return
 
         for i, v in enumerate(old):
             if v not in self.invites[guild.id]:
