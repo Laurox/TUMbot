@@ -55,16 +55,18 @@ class Invite(commands.Cog):
         channel = self.bot.get_channel(int(self.get_invitelog(guild.id)))
         if channel is None:
             return
-        new = await guild.invites()
+
         old = self.invites[guild.id]
+        self.invites[guild.id] = await guild.invites()
+
         for index, invite in enumerate(old):
-            if invite not in new:
+            if invite not in self.invites[guild.id]:
                 inviter = invite.inviter
                 await channel.send(
                     f"**{member}** ({member.id}) wurde von **{inviter}** ({inviter.id}) eingeladen. (Onetime)")
                 break
             else:
-                if invite.uses != new[index].uses:
+                if invite.uses != self.invites[guild.id][index].uses:
                     inviter = invite.inviter
                     await channel.send(
                         f"**{member}** ({member.id}) wurde von **{inviter}** ({inviter.id}) eingeladen. "
@@ -72,8 +74,6 @@ class Invite(commands.Cog):
                     break
         else:
             await channel.send("Konnte Invite nicht tracken!")
-        # If it throws an error a user managed to join a server that has no invite.
-        await self.update_invites(guild)
 
     @commands.Cog.listener()
     async def on_invite_create(self, invite):
