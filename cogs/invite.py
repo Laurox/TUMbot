@@ -1,5 +1,3 @@
-import asyncio
-
 import discord
 from discord.ext import commands
 
@@ -8,10 +6,13 @@ class Invite(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        # Channels
         self.invites = dict()
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        # Initialize all the invites
         for g in self.bot.guilds:
-            asyncio.run_coroutine_threadsafe(self.update_invites(g), self.bot.loop).result()
+            await self.update_invites(g)
 
     def get_invitelog(self, guild):
         return self.bot.conf.get(guild, 'invitelog')
