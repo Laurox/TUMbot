@@ -8,9 +8,11 @@ class Invite(commands.Cog):
         self.bot = bot
         self.invites = dict()
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        # Initialize all the invites
+        self.bot.loop.create_task(self.init_invites())
+
+    async def init_invites(self):
+        await self.bot.wait_until_ready()
+
         for g in self.bot.guilds:
             await self.update_invites(g)
 
