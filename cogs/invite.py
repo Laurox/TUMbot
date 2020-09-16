@@ -62,21 +62,29 @@ class Invite(commands.Cog):
         old = self.invites[guild.id]
         self.invites[guild.id] = await guild.invites()
 
-        for index, invite in enumerate(old):
-            if invite not in self.invites[guild.id]:
-                inviter = invite.inviter
-                await channel.send(
-                    f"**{member}** ({member.id}) wurde von **{inviter}** ({inviter.id}) eingeladen. (Onetime)")
+        for i, v in enumerate(old):
+            if v not in self.invites[guild.id]:
+                invite = v
                 break
-            else:
-                if invite.uses != self.invites[guild.id][index].uses:
-                    inviter = invite.inviter
-                    await channel.send(
-                        f"**{member}** ({member.id}) wurde von **{inviter}** ({inviter.id}) eingeladen. "
-                        f"(Invite: {invite.code})")
-                    break
+
+            if v.uses != self.invites[guild.id][i].uses:
+                invite = v
+                break
         else:
             await channel.send("Konnte Invite nicht tracken!")
+            return
+
+        text = f"**{member}** ({member.id}) wurde von **{invite.inviter}** ({invite.inviter.id}) eingeladen."
+
+        text += f" (Invite: {invite.code})"
+
+        # Invite has been used, so add one to the counter
+        invite.uses += 1
+
+        if invite.max_uses != 0:
+            text += f" ({invite.uses}/{invite.max_uses})"
+
+        await channel.send(text)
 
     @commands.Cog.listener()
     async def on_invite_create(self, invite):
