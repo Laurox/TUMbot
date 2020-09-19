@@ -1,3 +1,5 @@
+import asyncio
+
 from discord.ext import commands
 import discord
 
@@ -5,7 +7,6 @@ import discord
 class ReactionRoles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.active = {}
 
     @commands.group(invoke_without_command=True)
     @commands.has_permissions(manage_roles=True)
@@ -23,16 +24,55 @@ class ReactionRoles(commands.Cog):
             await ctx.send("Target role is higher than current highest role.", delete_after=60)
             return
 
-        self.active[ctx.author.id] = role.id
-        await ctx.send("React to a message with an emoji to finish the setup.", delete_after=60)
+        info_message = await ctx.send("React to a message with an emoji to finish the setup.")
+
+        try:
+            payload = await self.bot.wait_for('raw_reaction_add', check=lambda p: p.user_id == ctx.author.id, timeout=60)
+        except asyncio.TimeoutError:
+            await info_message.delete()
+            await ctx.send("Operation timed out. Try clicking a bit faster next time!")
+            return
+
+        guild = self.bot.get_guild(payload.guild_id)
+        channel = self.bot.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        member = guild.get_member(payload.user_id)
+
+        with self.bot.db.get(guild.id) as db:
+            db.execute("INSERT INTO reactionroles(message, emoji, role) VALUES(?, ?, ?)",
+                       (message.id, str(payload.emoji), role.id))
+
+        await message.add_reaction(payload.emoji)
+        await message.remove_reaction(payload.emoji, member)
+
+        await info_message.delete()
 
     @rr.command()
     @commands.has_permissions(manage_roles=True)
     async def delete(self, ctx):
         """Deletes a reactionrole"""
 
-        self.active[ctx.author.id] = None
-        await ctx.send("React to a message with an emoji to delete a reactionrole.", delete_after=60)
+        info_message = await ctx.send("React to a message with an emoji to delete a reactionrole.", delete_after=60)
+
+        try:
+            payload = await self.bot.wait_for('raw_reaction_add', check=lambda p: p.user_id == ctx.author.id, timeout=60)
+        except asyncio.TimeoutError:
+            await info_message.delete()
+            await ctx.send("Operation timed out. Try clicking a bit faster next time!")
+            return
+
+        guild = self.bot.get_guild(payload.guild_id)
+        channel = self.bot.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        member = guild.get_member(payload.user_id)
+
+        with self.bot.db.get(guild.id) as db:
+            db.execute("DELETE FROM reactionroles WHERE message = ? AND emoji = ?",
+                       (message.id, str(payload.emoji)))
+
+        await message.remove_reaction(payload.emoji, guild.me)
+        await message.remove_reaction(payload.emoji, member)
+        await info_message.delete()
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
@@ -42,22 +82,6 @@ class ReactionRoles(commands.Cog):
         member = guild.get_member(payload.user_id)
 
         if member == guild.me:
-            return
-
-        if member.id in self.active:
-            if self.active[member.id] is None:
-                with self.bot.db.get(guild.id) as db:
-                    db.execute("DELETE FROM reactionroles WHERE message = ? AND emoji = ?",
-                               (message.id, str(payload.emoji)))
-                await message.remove_reaction(payload.emoji, guild.me)
-            else:
-                with self.bot.db.get(guild.id) as db:
-                    db.execute("INSERT INTO reactionroles(message, emoji, role) VALUES(?, ?, ?)",
-                               (message.id, str(payload.emoji), self.active[member.id]))
-                await message.add_reaction(payload.emoji)
-
-            await message.remove_reaction(payload.emoji, member)
-            self.active.pop(member.id)
             return
 
         with self.bot.db.get(guild.id) as db:
