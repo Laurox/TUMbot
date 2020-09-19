@@ -22,7 +22,6 @@ class Bot(DBot):
         self.db.close_all()
 
     async def on_ready(self):
-        print(f"Bot is ready! Logged in as {self.user}.")
         Thread(target=self.job_runner).start()
 
     def job_runner(self):
