@@ -26,7 +26,7 @@ class Birthdays(commands.Cog):
     async def birthdays(self, ctx):
         """Manages birthdays"""
 
-        pass
+        await ctx.send_help(ctx.command)
 
     @birthdays.command()
     async def list(self, ctx, query=""):
