@@ -1,9 +1,10 @@
 import datetime
+import time
 import re
 from typing import Pattern
 import asyncio
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 
 class Birthdays(commands.Cog):
@@ -16,7 +17,10 @@ class Birthdays(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.bot.register_job_daily("00:01", self.congratulate_all)
+        self.congratulate.start()
+
+    def cog_unload(self):
+        self.congratulate.cancel()
 
     @commands.group(aliases=['birth', 'birthday', 'birthdate', 'geburtstag'], invoke_without_command=True)
     async def birthdays(self, ctx):
@@ -110,29 +114,40 @@ class Birthdays(commands.Cog):
         date = datetime.datetime.now()
         return date.day, date.month
 
-    def congratulate_all(self):
+    @tasks.loop(hours=24)
+    async def congratulate(self):
         day, month = self.get_current_date()
         for guild in self.bot.guilds:
-            asyncio.run_coroutine_threadsafe(self.congratulate(guild.id, day, month), self.bot.loop).result()
+            text = f"Geburtstage am {day}.{month}.:"
+            users = self.bot.db.get(guild.id).execute(
+                "SELECT userId FROM birthdays WHERE day = ? AND month = ?", (day, month)).fetchall()
+            if len(users) == 0:
+                return
+            for user in users:
+                text += f"\n    :tada: :fireworks: :partying_face: **Alles Gute zum Geburtstag**, <@{user[0]}> " \
+                        f":partying_face: :fireworks: :tada: "
 
-    async def congratulate(self, guildid, day, month):
-        text = f"Geburtstage am {day}.{month}.:"
-        users = self.bot.db.get(guildid).execute(
-            "SELECT userId FROM birthdays WHERE day = ? AND month = ?", (day, month)).fetchall()
-        if len(users) == 0:
-            return
-        for user in users:
-            text += f"\n    :tada: :fireworks: :partying_face: **Alles Gute zum Geburtstag**, <@{user[0]}> " \
-                    f":partying_face: :fireworks: :tada: "
+            channel = self.bot.conf.get(guild.id, 'birthday_channel')
 
-        channel = self.bot.conf.get(guildid, 'birthday_channel')
+            if channel is None:
+                return
 
-        if channel is None:
-            return
+            channel = await self.bot.fetch_channel(channel)
 
-        channel = await self.bot.fetch_channel(channel)
+            await channel.send(text)
 
-        await channel.send(text)
+    @congratulate.before_loop
+    async def congratulate_align(self):
+        current = datetime.datetime.now()
+        next_time = current + datetime.timedelta(days=1)  # Tomorrow
+        next_time = datetime.datetime(next_time.year, next_time.month, next_time.day, 0, 1, 0, 0)  # Clip to 00:01
+
+        # Convert into timestamps
+        current = time.mktime(current.timetuple())
+        next_time = time.mktime(next_time.timetuple())
+
+        # Sleep until then
+        await asyncio.sleep(next_time - current)
 
 
 def setup(bot):

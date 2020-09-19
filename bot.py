@@ -1,6 +1,5 @@
 import discord
 from discord.ext.commands import Bot as DBot
-from schedule import Scheduler
 
 
 class Bot(DBot):
@@ -8,16 +7,11 @@ class Bot(DBot):
         super().__init__(**options)
         self.db = db
         self.conf = conf
-        self.schedule = Scheduler()
 
     async def close(self):
         print("Shutting down!")
         await super().close()
         self.db.close_all()
-
-    def register_job_daily(self, daytime, f):
-        print(f"Registering job {f.__name__} to run every day at {daytime}")
-        self.schedule.every().day.at(daytime).do(f)
 
     async def send_table(self, messageable: discord.abc.Messageable, keys, table, maxlen=2000):
         key_length = {}
