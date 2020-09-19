@@ -19,7 +19,7 @@ class ReactionRoles(commands.Cog):
     async def add(self, ctx, role: discord.Role):
         """Creates a new reactionrole"""
 
-        if ctx.author.top_role <= role:
+        if ctx.author.top_role <= role and ctx.author != ctx.guild.owner:
             await ctx.send("Target role is higher than current highest role.", delete_after=60)
             return
 
