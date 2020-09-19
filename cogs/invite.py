@@ -28,7 +28,8 @@ class Invite(commands.Cog):
     @commands.group(invoke_without_command=True)
     async def invite(self, ctx):
         """Manages invites."""
-        pass
+
+        await ctx.send_help(ctx.command)
 
     @invite.command()
     @commands.has_permissions(administrator=True)
