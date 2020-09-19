@@ -1,6 +1,3 @@
-import time
-from threading import Thread
-
 import discord
 from discord.ext.commands import Bot as DBot
 from schedule import Scheduler
@@ -11,35 +8,16 @@ class Bot(DBot):
         super().__init__(**options)
         self.db = db
         self.conf = conf
-        self.jobs = []
-        self.run_jobs = True
         self.schedule = Scheduler()
 
     async def close(self):
         print("Shutting down!")
-        self.run_jobs = False
         await super().close()
         self.db.close_all()
-
-    async def on_ready(self):
-        Thread(target=self.job_runner).start()
-
-    def job_runner(self):
-        print("Starting background timer runner.")
-        while self.run_jobs:
-            try:
-                self.schedule.run_pending()
-            except Exception as e:
-                print(f"{type(e).__name__}: {e}")
-            time.sleep(10)
 
     def register_job_daily(self, daytime, f):
         print(f"Registering job {f.__name__} to run every day at {daytime}")
         self.schedule.every().day.at(daytime).do(f)
-
-    def register_job(self, timer, f):
-        print(f"Registering job {f.__name__} to run every {timer} seconds")
-        self.schedule.every(timer).seconds.do(f)
 
     async def send_table(self, messageable: discord.abc.Messageable, keys, table, maxlen=2000):
         key_length = {}
