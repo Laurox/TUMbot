@@ -1,3 +1,5 @@
+import re
+
 from discord.ext import commands
 
 
@@ -9,7 +11,7 @@ class Quotes(commands.Cog):
     async def quote(self, ctx, search=""):
         """Displays one random quote"""
 
-        search = "%" + search + "%"
+        search = "%" + re.sub(r'[^\x00-\x7F]+','_', search) + "%"
 
         with self.bot.db.get(ctx.guild.id) as db:
             quote = db.execute("SELECT content FROM quotes WHERE LOWER(content) LIKE ? ORDER BY RANDOM() LIMIT 1",
@@ -38,7 +40,7 @@ class Quotes(commands.Cog):
     async def list(self, ctx, search=""):
         """Lists all the quotes"""
 
-        search = f"%{search}%"
+        search = "%" + re.sub(r'[^\x00-\x7F]+','_', search) + "%"
 
         with self.bot.db.get(ctx.guild.id) as db:
             quotes = db.execute("SELECT content FROM quotes WHERE LOWER(content) LIKE ? ORDER BY content",
@@ -66,7 +68,7 @@ class Quotes(commands.Cog):
     async def delete(self, ctx, search):
         """Removes a quote"""
 
-        search = "%" + search + "%"
+        search = "%" + re.sub(r'[^\x00-\x7F]+','_', search) + "%"
 
         with self.bot.db.get(ctx.guild.id) as db:
             resulting_ids = db.execute("SELECT rowid FROM quotes WHERE LOWER(content) LIKE ? ORDER BY content",
