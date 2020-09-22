@@ -7,17 +7,12 @@ class DbMgr:
         self.db_handles = {}
         self.dbpath = dbpath
 
-    def open(self, guild):
-        guild = str(guild)
-        if guild in self.db_handles:
-            return
-
-        self.db_handles[guild] = self.create_new_conn(guild)
-        self.upgrade_db(self.db_handles[guild])
-
     def get(self, guild):
         guild = str(guild)
-        self.open(guild)
+
+        if guild not in self.db_handles:
+            self.db_handles[guild] = self.create_new_conn(guild)
+            self.upgrade_db(self.db_handles[guild])
 
         return self.db_handles[guild]
 
