@@ -13,7 +13,7 @@ class Logging(commands.Cog):
 
     async def log_stuff(self, member, message):
         try:
-            if member.client:
+            if not member.bot:
                 logchannelid = self.get_logchannel(member.guild.id)
                 if logchannelid is None:
                     return
