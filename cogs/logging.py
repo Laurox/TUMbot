@@ -11,17 +11,13 @@ class Logging(commands.Cog):
     def set_logchannel(self, guild, logchannel):
         return self.bot.conf.set(guild, 'logchannel', logchannel)
 
-    async def log_stuff(self, member, message):
-        try:
-            if not member.bot:
-                logchannelid = self.get_logchannel(member.guild.id)
-                if logchannelid is None:
-                    return
-                logch = self.bot.get_channel(int(logchannelid))
-                await logch.send(message)
-        except Exception:
-            pass
-    
+    async def log_stuff(self, guild, message):
+        logchannelid = self.get_logchannel(guild.id)
+        if logchannelid is None:
+            return
+        logch = self.bot.get_channel(int(logchannelid))
+        await logch.send(message)
+
     # LogChannel setzen
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -33,46 +29,37 @@ class Logging(commands.Cog):
     # Memberleave
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        await self.log_stuff(member, f":outbox_tray: **{member}** ({member.id}) hat den Server verlassen.")
+        await self.log_stuff(member.guild, f":outbox_tray: **{member}** ({member.id}) hat den Server verlassen.")
 
     # Member wird gebannt
     @commands.Cog.listener()
     async def on_member_ban(self, _, member):
-        await self.log_stuff(member, f":no_entry_sign: **{member}** ({member.id}) wurde gebannt.")
+        await self.log_stuff(member.guild, f":no_entry_sign: **{member}** ({member.id}) wurde gebannt.")
 
     # Nachricht löschen
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
-        try:
-            if payload.guild_id is None:
-                return
+        if payload.guild_id is None:
+            return
 
-            ch = payload.channel_id
-            guild = payload.guild_id
-            msg = payload.message_id
-            content = payload.cached_message.clean_content
-            member = payload.cached_message.author
-            channel = payload.cached_message.channel
+        guild = self.bot.get_guild(payload.guild_id)
+        channel = guild.get_channel(payload.channel_id)
+        message = channel.get_message(payload.message_id)
 
-            logchannelid = self.get_logchannel(member.guild.id)
-            if logchannelid is None:
-                return
+        logchannelid = self.get_logchannel(guild.id)
+        if logchannelid is None:
+            return
 
-            # Don't log if a bot's message has been deleted (unless it's from the log channel)
-            if member.bot and str(logchannelid) != str(channel.id):
-                return
+        # Don't log if a bot's message has been deleted (unless it's from the log channel)
+        if message.author.bot and str(logchannelid) != str(channel.id):
+            return
 
-            logch = self.bot.get_channel(int(logchannelid))
-
-            # Skip pretty presentation if we are deleting a log message from the log channel
-            if member.bot and str(logchannelid) == str(channel.id):
-                await logch.send(str(content))
-            else:
-                await logch.send(
-                    f":rcycle: Nachricht ({msg.id}) von **{member}** ({member.id}) in Channel **{channel}** ({ch}) "
-                    f"gelöscht mit dem Inhalt:\n{content}")
-        except Exception:
-            pass
+        # Skip pretty presentation if we are deleting a log message from the log channel
+        if message.author.bot and str(logchannelid) == str(channel.id):
+            await self.log_stuff(guild, message.clean_content)
+        else:
+            await self.log_stuff(guild, f":recycle: Nachricht ({message.id}) von **{message.author}** ({message.author.id}) in Channel **{channel}** ({channel.id}) "
+                f"gelöscht mit dem Inhalt:\n{message.clean_content}")
 
 
 def setup(bot):
