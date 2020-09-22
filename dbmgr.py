@@ -1,6 +1,4 @@
-import glob
 import os
-import re
 import sqlite3
 
 
@@ -22,16 +20,6 @@ class DbMgr:
         self.open(guild)
 
         return self.db_handles[guild]
-
-    def get_all(self):
-        for file in glob.glob(f"{self.dbpath}/*.db"):
-            search = re.search('/([0-9]+?)\.db', file)
-            if search is None or search.group(1) is None:
-                continue
-
-            self.open(search.group(1))
-
-        return list(self.db_handles.values())
 
     def create_new_conn(self, guild):
         connection = sqlite3.connect(f"{self.dbpath}/{guild}.db", check_same_thread=False)
