@@ -11,7 +11,7 @@ class Bot(DBot):
     async def close(self):
         print("Shutting down!")
         await super().close()
-        self.db.close_all()
+        self.db.close()
 
     async def send_table(self, messageable: discord.abc.Messageable, keys, table, maxlen=2000):
         key_length = {}

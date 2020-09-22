@@ -28,14 +28,11 @@ class DbMgr:
                 connection.executescript(file.read())
             user_version = connection.execute("PRAGMA user_version").fetchone()[0]
 
-    def close(self, guild, commit=True):
-        guild = str(guild)
-        if guild in self.db_handles:
-            if commit:
-                self.db_handles[guild].commit()
-            self.db_handles[guild].close()
-            self.db_handles.pop(guild, None)
-
-    def close_all(self):
+    def close(self, commit=True):
         while len(self.db_handles) > 0:
-            self.close(list(self.db_handles.keys())[0])
+            conn = self.db_handles.pop(list(self.db_handles.keys())[0])
+
+            if commit:
+                conn.commit()
+
+            conn.close()
